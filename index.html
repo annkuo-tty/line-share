@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>分享麻醉新知</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+<body style="text-align: center; padding-top: 50px; font-family: sans-serif;">
+    <p id="status">正在啟動分享功能...</p>
+
+    <script>
+        async function main() {
+            // 1. 初始化 LIFF
+            try {
+                await liff.init({ liffId: "2009327415-fhRW5lMC" }); // 這裡已換成你的 ID
+                
+                if (!liff.isLoggedIn()) {
+                    liff.login();
+                } else {
+                    sendShare();
+                }
+            } catch (err) {
+                document.getElementById('status').textContent = "初始化失敗: " + err;
+            }
+        }
+
+        async function sendShare() {
+            // 2. 呼叫分享視窗
+            if (liff.isApiAvailable('shareTargetPicker')) {
+                try {
+                    const res = await liff.shareTargetPicker([
+                        {
+                            "type": "flex",
+                            "altText": "麻醉新知交流分享了一則訊息給你",
+                            "contents": {
+                                "type": "carousel",
+                                "contents": [
+                                    {
+                                      "type": "bubble",
+                                      "body": {
+                                        "type": "box",
+                                        "layout": "vertical",
+                                        "contents": [
+                                          { "type": "text", "text": "麻醉新知交流", "weight": "bold", "size": "xl" },
+                                          { "type": "text", "text": "點擊下方按鈕查看最新內容", "margin": "md" }
+                                        ]
+                                      },
+                                      "footer": {
+                                        "type": "box",
+                                        "layout": "vertical",
+                                        "contents": [
+                                          { "type": "button", "style": "link", "height": "sm", "action": { "type": "uri", "label": "查看詳情", "uri": "https://line.me/R/ti/p/@你的帳號ID" } }
+                                        ]
+                                      }
+                                    }
+                                ]
+                            }
+                        }
+                    ]);
+                    
+                    if (res) {
+                        // 分享成功
+                        liff.closeWindow();
+                    } else {
+                        // 用戶取消
+                        liff.closeWindow();
+                    }
+                } catch (error) {
+                    document.getElementById('status').textContent = "分享發生錯誤。";
+                }
+            } else {
+                document.getElementById('status').textContent = "您的 LINE 版本不支援此功能。";
+            }
+        }
+
+        main();
+    </script>
+</body>
+</html>
