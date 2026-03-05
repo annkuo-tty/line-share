@@ -1,80 +1,124 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>分享麻醉新知</title>
+    <title>流感盾 - 專業防護資訊分享</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        body { font-family: -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; background-color: #f4f4f7; color: #333; }
+        .container { text-align: center; padding: 20px; background: white; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 80%; max-width: 400px; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #00B900; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .btn { display: none; background-color: #00B900; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; margin-top: 20px; cursor: pointer; border: none; font-size: 16px; }
+        #status-text { font-size: 14px; color: #666; }
+    </style>
 </head>
-<body style="text-align: center; padding-top: 50px; font-family: sans-serif;">
-    <p id="status">正在啟動分享功能...</p>
+<body>
 
-    <script>
-        async function main() {
-            // 1. 初始化 LIFF
-            try {
-                await liff.init({ liffId: "2009327415-fhRW5lMC" }); // 這裡已換成你的 ID
-                
-                if (!liff.isLoggedIn()) {
-                    liff.login();
-                } else {
-                    sendShare();
+<div class="container">
+    <h2 style="margin-bottom: 10px;">🛡️ 流感盾</h2>
+    <p id="status-text">正在啟動防護分享功能...</p>
+    <div id="loader" class="loader"></div>
+    
+    <button id="share-btn" class="btn" onclick="manualShare()">點我分享給好友</button>
+</div>
+
+<script>
+    // --- 設定區 ---
+    const MY_LIFF_ID = "2009327415-fhRW5lMC"; 
+    const SHARE_TEXT = "分享給你這個超實用的「流感盾」資訊！保護自己也保護家人，點此查看：";
+    
+    const FLEX_CONTENT = {
+        "type": "bubble",
+        "hero": {
+            "type": "image",
+            "url": "https://images.unsplash.com/photo-1584036561566-baf8f5f1b144?auto=format&fit=crop&q=80&w=1000", // 換成與流感/防護相關的示意圖
+            "size": "full",
+            "aspectRatio": "20:13",
+            "aspectMode": "cover"
+        },
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+                { "type": "text", "text": "流感盾：您的健康防護網", "weight": "bold", "size": "xl" },
+                { "type": "text", "text": "即時掌握流感資訊與專業衛教內容，點擊下方「立即查看」掌握第一手消息。", "size": "sm", "color": "#666666", "margin": "md", "wrap": true }
+            ]
+        },
+        "footer": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+                { 
+                    "type": "button", 
+                    "action": { "type": "uri", "label": "立即查看", "uri": "https://liff.line.me/" + MY_LIFF_ID },
+                    "style": "primary",
+                    "color": "#00B900"
                 }
-            } catch (err) {
-                document.getElementById('status').textContent = "初始化失敗: " + err;
-            }
+            ]
         }
+    };
 
-        async function sendShare() {
-            // 2. 呼叫分享視窗
-            if (liff.isApiAvailable('shareTargetPicker')) {
-                try {
-                    const res = await liff.shareTargetPicker([
-                        {
-                            "type": "flex",
-                            "altText": "麻醉新知交流分享了一則訊息給你",
-                            "contents": {
-                                "type": "carousel",
-                                "contents": [
-                                    {
-                                      "type": "bubble",
-                                      "body": {
-                                        "type": "box",
-                                        "layout": "vertical",
-                                        "contents": [
-                                          { "type": "text", "text": "麻醉新知交流", "weight": "bold", "size": "xl" },
-                                          { "type": "text", "text": "點擊下方按鈕查看最新內容", "margin": "md" }
-                                        ]
-                                      },
-                                      "footer": {
-                                        "type": "box",
-                                        "layout": "vertical",
-                                        "contents": [
-                                          { "type": "button", "style": "link", "height": "sm", "action": { "type": "uri", "label": "查看詳情", "uri": "https://line.me/R/ti/p/@你的帳號ID" } }
-                                        ]
-                                      }
-                                    }
-                                ]
-                            }
-                        }
-                    ]);
-                    
-                    if (res) {
-                        // 分享成功
-                        liff.closeWindow();
-                    } else {
-                        // 用戶取消
-                        liff.closeWindow();
-                    }
-                } catch (error) {
-                    document.getElementById('status').textContent = "分享發生錯誤。";
-                }
+    async function main() {
+        try {
+            await liff.init({ liffId: MY_LIFF_ID });
+            if (!liff.isLoggedIn()) {
+                liff.login();
             } else {
-                document.getElementById('status').textContent = "您的 LINE 版本不支援此功能。";
+                checkAndShare();
             }
+        } catch (err) {
+            document.getElementById('status-text').textContent = "系統初始化失敗";
+            console.error(err);
         }
+    }
 
-        main();
-    </script>
+    async function checkAndShare() {
+        const statusText = document.getElementById('status-text');
+        const loader = document.getElementById('loader');
+        const btn = document.getElementById('share-btn');
+
+        if (liff.isApiAvailable('shareTargetPicker')) {
+            statusText.textContent = "請選擇要分享的好友...";
+            try {
+                const res = await liff.shareTargetPicker([
+                    {
+                        "type": "flex",
+                        "altText": "流感盾為您送來健康資訊",
+                        "contents": {
+                            "type": "carousel",
+                            "contents": [FLEX_CONTENT]
+                        }
+                    }
+                ]);
+                if (res) {
+                    statusText.textContent = "分享成功！";
+                    setTimeout(() => liff.closeWindow(), 1500);
+                } else {
+                    statusText.textContent = "已取消分享";
+                    loader.style.display = "none";
+                    btn.style.display = "inline-block";
+                }
+            } catch (error) {
+                statusText.textContent = "請點擊下方按鈕進行分享";
+                loader.style.display = "none";
+                btn.style.display = "inline-block";
+            }
+        } else {
+            statusText.textContent = "點擊下方按鈕分享給朋友";
+            loader.style.display = "none";
+            btn.style.display = "inline-block";
+        }
+    }
+
+    function manualShare() {
+        const shareUrl = "https://line.me/R/share?text=" + encodeURIComponent(SHARE_TEXT + "https://liff.line.me/" + MY_LIFF_ID);
+        window.location.href = shareUrl;
+    }
+
+    main();
+</script>
+
 </body>
 </html>
